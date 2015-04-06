@@ -1,0 +1,19 @@
+---
+
+- name: influxdb-configure | Setup influxdb pt. 1
+  template: src=config.toml.j2 dest=/opt/influxdb/shared/config.toml
+  notify: influxdb restart
+
+- name: influxdb-configure | Setup shards
+  copy: src=shards.json dest=/opt/influxdb/shared/shards.json
+
+- name: influxdb-configure | Ensure the service is started
+  service: name=influxdb state=started
+
+- name: influxdb-configure | Setup databases
+  shell: curl -X POST "http://{{ influxdb_bind_address }}:{{ influxdb_port }}/cluster/database_configs/{{ item }}?u=root&p={{influxdb_root_password}}" --data-binary @/tmp/shards_default.json.j2
+  with_items: influxdb_databases
+
+- name: influxdb-configure | Setup users
+  shell: "curl -X POST 'http://{{ influxdb_bind_address }}:{{ influxdb_port }}/db/{{item.db}}/users?u=root&p={{influxdb_root_password}}' -d '{\"name\": \"{{item.name}}\", \"password\": \"{{item.pass}}\"}'"
+  with_items: influxdb_users

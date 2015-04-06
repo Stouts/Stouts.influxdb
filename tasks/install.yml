@@ -1,0 +1,13 @@
+---
+
+- name: influxdb-install | Ensure influxdb user is exists
+  user: name=influxdb system=yes
+
+- name: influxdb-install | Ensure influxdb directory is exists
+  file: path=/opt/influxdb state=directory owner=influxdb mode=0755
+
+- name: influxdb-install | Download influxdb
+  get_url: url={{influxdb_deb}} dest=/opt/influxdb/influxdb.deb
+
+- name: influxdb-install | Install influxdb
+  apt: deb=/opt/influxdb/influxdb.deb
